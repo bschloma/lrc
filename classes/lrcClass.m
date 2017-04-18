@@ -303,40 +303,21 @@ classdef lrcClass
         lesExactMoms = lesExactStationaryMoments(rB,KB,sigma,2);
         obj.dis.lesExactMoms = lesExactMoms;
         obj.dis.lrcExactMoms = zeros(numalphs,M);
-        %bins = obj.dis.bins;
         
-%         if lplot
-%             figure; hold on;
-%         end
-%         
+        
+        
         %% Loop through alphas
         for s = 1:numalphs
-            %popbins = logspace(-10,log10(max(Kvec)),numbins);
+
             [pophist,~,mendvec(s),varvec(s)] = computeLRCendHist(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),Tmax,numtrials,lextinct,bins,false);
-%             if lplot
-%                 ax_s = subplot(2,3,s);
-%                 bar(ax_s,bins,pophist./sum(pophist)./diff(bins(2:3)),'facecolor',poiscolor,'edgecolor',poiscolor)
-%                 %bar(ax_s,bins,pophist./sum(pophist),'facecolor',poiscolor,'edgecolor',poiscolor)
-%                 
-%                 %xlabel('log10(X)','fontsize',22)
-%                 %ylabel('P(log10(X))','fontsize',22)
-%                 set(gca,'fontsize',22)
-%                 
-%                 if s > 2
-%                     axis([0 5 0 ymax])
-%                 else
-%                     axis([0 5 0 3])
-%                 end
-%             end
-            
+                       
             obj.dis.lrcHist(s,:) = pophist;
             obj.dis.lrcMeans(s) = mendvec(s);
             obj.dis.lrcVars(s) = varvec(s);
             
             obj.dis.dkl(s) = DKL(pophist,obj.dis.lesHist);
             obj.dis.lrcExactMoms(s,:) = lrcExactStationaryMoments(rvec(s),Kvec(s),lvec(s),fvec(s),M);
-            
-            
+                        
             
         end
         
@@ -345,72 +326,6 @@ classdef lrcClass
         end
         
         
-%         s = s+1;
-%         rB = mu - sigma^2/2;
-%         KB = K*(1-sigma^2/2/mu);
-%         dtB = .01;
-%         
-%         %[pophist,popbins] = makeESendHist(rB,KB,sigma,dtB,Tmax,numtrials,numbins,false);
-%         s = s+1;
-%         ax_s = subplot(2,3,s);
-%         %bar(ax_s,bins,obj.dis.lesHist./sum(obj.dis.lesHist),'facecolor',bcolor,'edgecolor',bcolor)
-% 
-%         bar(ax_s,bins,obj.dis.lesHist./sum(obj.dis.lesHist)./diff(bins(2:3)),'facecolor',bcolor,'edgecolor',bcolor)
-%         %xlabel('log10(X)','fontsize',22)
-%         %ylabel('P(log10(X))','fontsize',22)
-%         set(gca,'fontsize',22)
-%         axis([0 5 0 ymax])
-%  
-%         xmin = .8; xmax_mult = 7; numxs = 10;
-%         xvec = linspace(xmin,xmax_mult*scalevec(end),numxs);
-%         K = Kparams(1);
-%         
-%         
-%         mend_theory = Kvec.*(1+lvec.*log(fvec)./rvec);
-%         figure; hold on;
-%         %plot(scalevec,mendvec,'ko','markerfacecolor',pcolor,'linewidth',2)
-%         plot(scalevec,mendvec./K,'ko','markerfacecolor',poiscolor,'markersize',22,'linewidth',2)
-% 
-%         plot(scalevec,mend_theory./K,'color',poiscolor,'linewidth',4)
-%         plot(xmax_mult*scalevec(end),obj.dis.lesMeans./K,'ks','markerfacecolor',bcolor,'linewidth',2,'markersize',22)
-%         %plot(xvec,lesExactMoms(1).*ones(size(xvec)),'kd','color',bcolor,'markerfacecolor',.5*bcolor,'linewidth',1,'markersize',18)
-%         plot(xvec,lesExactMoms(1).*ones(size(xvec))./K,'color',bcolor,'linewidth',4,'linestyle','--')
-% 
-%         set(gca,'fontsize',22,'xscale','log','linewidth',4)
-%         xlabel('\alpha','fontsize',22)
-%         ylabel('E[X]/K','fontsize',22)
-%         axis([xmin xmax_mult*scalevec(end) 0 1]);
-%         
-%        
-%         vend_theory = Kvec.^2.*(-log(fvec)-(1-fvec)).*lvec./rvec.*(1+lvec.*log(fvec)./rvec);
-%         vend_theory_lim = Kvec.^2.*(log(fvec).^2).*lvec./2./rvec.*(1+lvec.*log(fvec)./rvec);
-%         figure; hold on;
-%         plot(scalevec,varvec./K^2,'ko','markerfacecolor',poiscolor,'linewidth',2,'markersize',22)
-%         plot(7*scalevec(end),obj.dis.lesVars./K^2,'ks','markerfacecolor',bcolor,'linewidth',2,'markersize',22)
-%         plot(scalevec,vend_theory./K^2,'color',poiscolor,'linewidth',4)
-%         plot(scalevec,vend_theory_lim./vend_theory_lim,'color','r','linewidth',4)
-%         plot(2*scalevec(end),lesExactMoms(2) - lesExactMoms(1)^2,'ks','markerfacecolor',bcolor,'linewidth',1,'markersize',30)
-%         
-%         lesExactVar = lesExactMoms(2) - lesExactMoms(1)^2;
-%         plot(xvec,lesExactVar./K^2.*ones(size(xvec)),'color',bcolor,'linewidth',4,'linestyle','--')
-%        
-%         set(gca,'fontsize',22,'linewidth',4)
-%         xlabel('\alpha','fontsize',22)
-%         ylabel('Var[X]/K^2','fontsize',22)
-%         set(gca,'xscale','log')
-%         axis([.8 7*scalevec(end) 0 .3])
-%         
-%         figure; hold on;
-%         plot(scalevec,obj.dis.dkl,'ko','markerfacecolor',[.2 .2 .2],'markersize',22,'linewidth',2)
-% 
-%         %plot(xmax_mult*scalevec(end),obj.dis.lesMeans./K,'ks','markerfacecolor',bcolor,'linewidth',2,'markersize',22)
-%         %plot(xvec,lesExactMoms(1).*ones(size(xvec)),'kd','color',bcolor,'markerfacecolor',.5*bcolor,'linewidth',1,'markersize',18)
-%         %plot(xvec,lesExactMoms(1).*ones(size(xvec))./K,'color',bcolor,'linewidth',4,'linestyle','--')
-% 
-%         set(gca,'fontsize',22,'xscale','log','linewidth',4)
-%         xlabel('\alpha','fontsize',22)
-%         ylabel('D_{KL}','fontsize',22)
-%         axis([xmin xmax_mult*scalevec(end) 0 1.2*max(obj.dis.dkl)]);
         
     end
     

@@ -250,27 +250,27 @@ classdef lrcClass
             zmax = obj.params.zsweep.zmax;
             numzs = obj.params.zsweep.numzs;
             
-            %zmin_an = obj.params.zsweep.zmin_an;
-            %zmax_an = obj.params.zsweep.zmax_an;
-            %numzs_an = obj.params.zsweep.numzs_an;
+            zmin_an = obj.params.zsweep.zmin_an;
+            zmax_an = obj.params.zsweep.zmax_an;
+            numzs_an = obj.params.zsweep.numzs_an;
             numsteps = length(0:obj.params.dt:obj.params.Tmax);
             
             %% Arrays
             zarray = linspace(zmin,zmax,numzs);
             larray = -zarray./log(f);
             farray = exp(-zarray./lambda);
-            %zarray_an = linspace(zmin_an,zmax_an,numzs_an);
-            %larray_an = -zarray_an./log(f);
-            %farray_an = exp(-zarray_an./lambda);
+            zarray_an = linspace(zmin_an,zmax_an,numzs_an);
+            larray_an = -zarray_an./log(f);
+            farray_an = exp(-zarray_an./lambda);
             %         momentsL = zeros(numsteps,M,numel(larray));
             %         momentsF = zeros(numsteps,M,numel(larray));
-            %statMomL = zeros(numzs_an,M);
-            %statMomF = zeros(numzs_an,M);
+            statMomL = zeros(numzs_an,M);
+            statMomF = zeros(numzs_an,M);
             
             %% Compute
             % sweep lambda
             for j = 1:numzs
-                disp(['Beginning lambda # ' num2str(j) ' of ' num2str(obj.params.zsweep.numzs)])
+                disp(['lambda # ' num2str(j)])
                 
                 obj.momentSweep.momentsL(:,:,j) = lrcMoments(mu,Kparams,f,larray(j),numtrials,Tmax,dt,lextinct,method,M);
                 
@@ -278,7 +278,7 @@ classdef lrcClass
             
             % sweep f
             for k = 1:numzs
-                disp(['Beginning f # ' num2str(k) ' of ' num2str(obj.params.zsweep.numzs)])
+                disp(['f # ' num2str(k)])
                 
                 obj.momentSweep.momentsF(:,:,k) = lrcMoments(mu,Kparams,farray(k),lambda,numtrials,Tmax,dt,lextinct,method,M);
                 
@@ -288,19 +288,47 @@ classdef lrcClass
             %% Plot
             if lplot
                 
-                obj.plotMomentSweepLRC();
+                meanEndL = reshape(obj.momentSweep.momentsL(end,1,:),1,numzs);
+                varEndL = reshape(obj.momentSweep.momentsL(end,2,:) - obj.momentSweep.momentsL(end,1,:).^2,1,numzs);
+                
+                meanEndF = reshape(obj.momentSweep.momentsF(end,1,:),1,numzs);
+                varEndF = reshape(obj.momentSweep.momentsF(end,2,:) - obj.momentSweep.momentsF(end,1,:).^2,1,numzs);
+                
+                for jj = 1:numzs_an
+                    statMomL(jj,:) = lrcExactStationaryMoments(mu,Kparams(1),larray_an(jj),f,M);
+                end
+                
+                for kk = 1:numzs_an
+                    statMomF(kk,:) = lrcExactStationaryMoments(mu,Kparams(1),lambda,farray_an(kk),M);
+                end
+                
+                meanEndL_an = statMomL(:,1);
+                meanEndF_an = statMomF(:,1);
+                
+                varEndL_an = statMomL(:,2) - meanEndL_an.^2;
+                varEndF_an = statMomF(:,2) - meanEndF_an.^2;
+                
+                
+                figure; hold on;
+                plot(meanEndL./Kparams(1),varEndL./Kparams(1)./Kparams(1),'kd','markersize',24,'markerfacecolor',poiscolor);
+                plot(meanEndF./Kparams(1),varEndF./Kparams(1)./Kparams(1),'ko','markersize',24,'markerfacecolor',poiscolor);
+                plot(meanEndL_an./Kparams(1),varEndL_an./Kparams(1)./Kparams(1),'k-','linewidth',4)
+                plot(meanEndF_an./Kparams(1),varEndF_an./Kparams(1)./Kparams(1),'k-','linewidth',4)
+                
+                set(gca,'fontsize',24,'linewidth',4)
+                xlabel('E[X]/\kappa','fontsize',24);
+                ylabel('Var[X]/\kappa^2','fontsize',24);
+                axis([0 1 0 .3])
                 
             end
         end
         
-        function obj = plotMomentSweepLRC(obj)
+        function obj = plotMomentSweep(obj)
             statMomL = zeros(obj.params.zsweep.numzs_an,obj.params.M);
             statMomF = zeros(obj.params.zsweep.numzs_an,obj.params.M);
-            zarray_an = linspace(obj.params.zsweep.zmin_an,obj.params.zsweep.zmax_an,...
-                obj.params.zsweep.numzs_an);
-            larray_an = -zarray_an./log(obj.params.f);
-            farray_an = exp(-zarray_an./obj.params.lambda);
-            
+            zarray_an = linspace(obj.params.zsweep.zmin_an,obj.params.zsweep.zmax_an,numzs_an);
+            larray_an = -zarray_an./log(f);
+            farray_an = exp(-zarray_an./lambda);        
             meanEndL = reshape(obj.momentSweep.momentsL(end,1,:),1,obj.params.zsweep.numzs);
             varEndL = reshape(obj.momentSweep.momentsL(end,2,:) - obj.momentSweep.momentsL(end,1,:).^2,1,obj.params.zsweep.numzs);
             
@@ -309,12 +337,12 @@ classdef lrcClass
             
             for jj = 1:obj.params.zsweep.numzs_an
                 statMomL(jj,:) = lrcExactStationaryMoments(obj.params.mu,obj.params.Kparams(1),...
-                    larray_an(jj),obj.params.f,obj.params.M);
+                    obj.params.larray_an(jj),obj.params.f,obj.params.M);
             end
             
             for kk = 1:obj.params.zsweep.numzs_an
                 statMomF(kk,:) = lrcExactStationaryMoments(obj.params.mu,obj.params.Kparams(1),...
-                    obj.params.lambda,farray_an(kk),obj.params.M);
+                    obj.params.lambda,obj.params.farray_an(kk),obj.params.M);
             end
             
             meanEndL_an = statMomL(:,1);
@@ -325,8 +353,8 @@ classdef lrcClass
             
             
             figure; hold on;
-            plot(meanEndL./obj.params.Kparams(1),varEndL./obj.params.Kparams(1)./obj.params.Kparams(1),'kd','markersize',24,'markerfacecolor',obj.params.poiscolor);
-            plot(meanEndF./obj.params.Kparams(1),varEndF./obj.params.Kparams(1)./obj.params.Kparams(1),'ko','markersize',24,'markerfacecolor',obj.params.poiscolor);
+            plot(meanEndL./obj.params.Kparams(1),varEndL./obj.params.Kparams(1)./obj.params.Kparams(1),'kd','markersize',24,'markerfacecolor',poiscolor);
+            plot(meanEndF./obj.params.Kparams(1),varEndF./obj.params.Kparams(1)./obj.params.Kparams(1),'ko','markersize',24,'markerfacecolor',poiscolor);
             plot(meanEndL_an./obj.params.Kparams(1),varEndL_an./obj.params.Kparams(1)./obj.params.Kparams(1),'k-','linewidth',4)
             plot(meanEndF_an./obj.params.Kparams(1),varEndF_an./obj.params.Kparams(1)./obj.params.Kparams(1),'k-','linewidth',4)
             

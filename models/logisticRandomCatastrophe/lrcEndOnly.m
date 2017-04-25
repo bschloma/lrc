@@ -36,7 +36,7 @@
 % Date:     3/18/17 - First written
 %           4/10/17 - Vectorized integration
 
-function [popend] = lrcEndOnly(mu,Kparams,f, lambda, numtrials, Tmax, dt,lextinct)
+function [popend] = lrcEndOnly(mu,Kparams,f, lambda, numtrials, Tmax, dt,lextinct,method)
 
 rng('shuffle'); %initialize random number generator
 
@@ -80,6 +80,11 @@ if ~exist('M', 'var') || isempty(M)
     M = 6;
 end
 
+if ~exist('method', 'var') || isempty(method)
+    method = 'pdmp';
+    eta = 1;
+end
+
 % Set things up
 tarray = 0:dt:Tmax;  % array of time points
 numsteps = length(tarray); % number of time points, including t0
@@ -95,6 +100,13 @@ pop0 = 10;
 
 pop_prior = pop0*ones(1,numtrials);
 
+switch method
+    case 'pdmp'
+        eta = 1;
+    case 'euler'
+        eta = 0;
+end
+
 % The actual simulation
 for j=2:numsteps
      
@@ -105,7 +117,7 @@ for j=2:numsteps
     dNt = random_numbers < (lambda*dt); % true at time points where a collapse occurs
     
     % Vectorized integration step
-    thispop = (1-dNt).*pop_prior + (1-dNt).*dt*mu.*pop_prior.*(1-pop_prior./K) + dNt.*f.*pop_prior;
+    thispop = (1-dNt).*pop_prior + (1-eta.*dNt).*dt*mu.*pop_prior.*(1-pop_prior./K) + dNt.*f.*pop_prior;
     
     if lextinct
         thispop(thispop<popthresh) = 0;

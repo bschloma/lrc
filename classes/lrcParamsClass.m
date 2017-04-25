@@ -54,6 +54,8 @@ classdef lrcParamsClass
         poiscolor = [0. 0. 0.];
         bcolor = [0. 0. 0.];
         M = 0;
+        method = '';
+      
 
         zsweep = struct();
         distrafo = struct();
@@ -99,6 +101,7 @@ classdef lrcParamsClass
             obj.lplot = true;
             obj.sigma = .8;
             obj.M = 8;
+            obj.method = 'pdmp';
             
             %obj.zsweep = struct();
             %obj.distrafo = struct();
@@ -157,6 +160,16 @@ classdef lrcParamsClass
             obj.distrafo.lmultmax = 75;
             
             obj.distrafo.ymax = 3;
+            obj.distrafo.method = 'euler';
+        end
+        
+         function obj = initMTE(obj)
+                        
+            obj.mte.numls = 5;
+            obj.mte.lmultmax = 75;
+            obj.mte.numKs = 5;
+            obj.mte.Kmultmax = 2.5;
+            
         end
 %         
 %         function obj = mapSigma(obj)

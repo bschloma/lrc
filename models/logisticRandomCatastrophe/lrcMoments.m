@@ -33,7 +33,7 @@
 % 
 % Date:     3/18/17
 
-function [moments] = lrcMoments(mu,Kparams,f, lambda, numtrials, Tmax, dt,lextinct,M)
+function [moments] = lrcMoments(mu,Kparams,f, lambda, numtrials, Tmax, dt,lextinct,method,M)
 
 rng('shuffle'); %initialize random number generator
 
@@ -77,6 +77,11 @@ if ~exist('M', 'var') || isempty(M)
     M = 6;
 end
 
+if ~exist('method', 'var') || isempty(method)
+    method = 'pdmp';
+    eta = 1;
+end
+
 % Set things up
 tarray = 0:dt:Tmax;  % array of time points
 numsteps = length(tarray); % number of time points, including t0
@@ -94,13 +99,23 @@ pop0 = sqrt(Kparams(1));%10;
 pop_prior = pop0*ones(1,numtrials);
 moments(1,:) = pop0.^mvec;
 
+switch method
+    case 'pdmp'
+        eta = 1.;
+    case 'euler'
+        eta = 0.;
+    otherwise
+        disp('Error in lrcMoments:  Invalid method type');
+        return
+end
+
 % The actual simulation
 for j=2:numsteps
      
     random_numbers = rand(1,numtrials); % pre-calculate random numbers, [0, 1]
     dNt = random_numbers < (lambda*dt); % true at time points where a collapse occurs
     
-    thispop = (1-dNt).*pop_prior + (1-dNt).*dt*mu.*pop_prior.*(1-pop_prior./K) + dNt.*f.*pop_prior;
+    thispop = (1-dNt).*pop_prior + (1-eta.*dNt).*dt*mu.*pop_prior.*(1-pop_prior./K) + dNt.*f.*pop_prior;
     
     if lextinct
         thispop(thispop<popthresh) = 0;

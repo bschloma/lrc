@@ -1,6 +1,6 @@
-function [pophist,popbins,mend,vend] = computeLRCendHist(r,K,lambda,f,dt,Tmax,numtrials,lextinct,popbins,lplot)
+function [pophist,popbins,mend,vend] = computeLRCendHist(r,K,lambda,f,dt,Tmax,numtrials,lextinct,method,popbins,lplot)
 
-[popend] = lrcEndOnly(r,K,f,lambda,numtrials,Tmax,dt,lextinct);
+[popend] = lrcEndOnly(r,K,f,lambda,numtrials,Tmax,dt,lextinct,method);
 
 mend = mean(popend);
 vend = var(popend);

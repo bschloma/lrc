@@ -705,8 +705,9 @@ classdef lrcClass
             axis([.8 7*obj.dis.scalevec(end) 0 .3])
             
             %figure; hold on;
+            norm = sum(obj.dis.lrcHist(1,:).*obj.dis.bins);
             ax = subplot(3,1,3); hold on;
-            plot(obj.dis.scalevec,obj.dis.dkl.*1e-5,'ko','markerfacecolor',[.2 .2 .2],'markersize',22,'linewidth',2)
+            plot(obj.dis.scalevec,obj.dis.dkl./norm,'ko','markerfacecolor',[.2 .2 .2],'markersize',22,'linewidth',2)
             
             %plot(xmax_mult*scalevec(end),obj.dis.lesMeans./K,'ks','markerfacecolor',bcolor,'linewidth',2,'markersize',22)
             %plot(xvec,lesExactMoms(1).*ones(size(xvec)),'kd','color',bcolor,'markerfacecolor',.5*bcolor,'linewidth',1,'markersize',18)
@@ -714,8 +715,8 @@ classdef lrcClass
             
             set(gca,'fontsize',22,'xscale','log','linewidth',4)
             xlabel('\alpha','fontsize',30)
-           ylabel('D_{KL} (10^5)','fontsize',22)
-            axis([xmin xmax_mult*obj.dis.scalevec(end) 0 1.2*max(obj.dis.dkl.*1e-5)]);
+           ylabel('D_{KL} ','fontsize',22)
+            axis([xmin xmax_mult*obj.dis.scalevec(end) 0 1.2*max(obj.dis.dkl./norm)]);
             
             
         end

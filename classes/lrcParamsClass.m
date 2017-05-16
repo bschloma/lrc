@@ -145,7 +145,7 @@ classdef lrcParamsClass
             obj.zsweep.numzs_an = 300;
             
             obj.zsweep.sigmin = .0047;
-            obj.zsweep.sigmax = 1.2649;
+            obj.zsweep.sigmax = 1.5;%:1.2649;
             obj.zsweep.numsigs = 6;
             obj.zsweep.sigmin_an = .0047;
             obj.zsweep.sigmax_an = 1.2649;
@@ -170,8 +170,18 @@ classdef lrcParamsClass
             obj.mte.numKs = 5;
             obj.mte.Kmultmax = 2.5;
             
-        end
+         end
+        
+         function obj = initMTEtrafo(obj)
+             obj.mte.mtetrafo = struct();
+             
+             obj.mte.mtetrafo.numalphs = 5;
+             obj.mte.mtetrafo.lmultmax = 75;
+             
+         end
+             
 %         
+
 %         function obj = mapSigma(obj)
 %             
 %             obj.distrafo.sigmin = sqrt(2*params.zmin);

@@ -32,7 +32,6 @@ classdef lrcClass
         dis = struct();                 % 'distributions', struct for distribution transformation 
         mte = struct();                 % 'mean time to extinction', struct for MTE calculations
         
-        
     end
     
     methods
@@ -837,6 +836,101 @@ classdef lrcClass
             %axis([1e0 1e6 1e0 1e4])
             %title('MTE','fontsize',24)
             %legend({'LRC','LES'},'fontsize',24)
+            
+        end
+        
+        function obj = mteTrafo(obj)
+            
+            
+            
+            %% Unpack params locally
+            mu = obj.params.mu;
+            Kparams = obj.params.Kparams;
+            K = Kparams(1);
+            Tmax = obj.params.Tmax;
+            dt = obj.params.dt;
+            numtrials = obj.params.numtrials;
+            f = obj.params.f;
+            lambda = obj.params.lambda;
+            lextinct = obj.params.lextinct;
+            lplot = obj.params.lplot;
+            poiscolor = obj.params.poiscolor;
+            bcolor = obj.params.bcolor;
+            sigma = obj.params.sigma;
+            M = obj.params.M;
+            
+            if sum(strcmp(fieldnames(obj.params.mte),'mtetrafo'))==0
+                obj.params = obj.params.initMTEtrafo();
+            end
+            
+            numalphs = obj.params.mte.mtetrafo.numalphs;
+            lmultmax = obj.params.mte.mtetrafo.lmultmax;
+            %ymax = obj.params.distrafo.ymax;
+            %method = obj.params.distrafo.method;
+            
+            
+            %% Arrays
+            
+            
+            scalevec = logspace(0,log10(lmultmax),numalphs);
+            obj.mte.mteTrafo.scalevec = scalevec;
+            
+            lvec = lambda.*scalevec;
+            fvec = exp(-sigma./sqrt(lvec));
+            rvec = mu -lvec.*log(fvec) - lvec.*log(fvec).*log(fvec)./2;
+            Kvec = K.*(1-lvec.*log(fvec)./mu - lvec.*log(fvec).*log(fvec)./2./mu);
+            dtvec = dt./sqrt(scalevec);    %adaptive timestep
+            
+            obj.mte.mteTrafo.lvec = lvec;
+            obj.mte.mteTrafo.fvec = fvec;
+            obj.mte.mteTrafo.rvec = rvec;
+            obj.mte.mteTrafo.Kvec = Kvec;
+            obj.mte.mteTrafo.dtvec = dtvec;
+            
+            
+            obj.mte.mteTrafo.lrcMTE = zeros(numalphs,1);
+            obj.mte.mteTrafo.lesMTE = 0;
+            
+            rB = mu;
+            KB = K;
+            dtB = obj.params.dt;
+            
+            [obj.mte.mteTrafo.lesMTE] = lesMTE(rB,KB,sigma,dtB,numtrials);
+            
+            
+            
+            
+            %% Loop through alphas
+            for s = 1:numalphs
+                disp(['Beginning alpha = ' num2str(scalevec(s))])
+                
+                [obj.mte.mteTrafo.lrcMTE(s)] = lrcMTE(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),numtrials,false);                
+                
+            end
+            
+            if lplot
+                obj.plotMTEtrafo();
+            end
+            
+            
+            
+        end
+        
+        function obj = plotMTEtrafo(obj)
+            
+            if sum(strcmp(fieldnames(obj.mte),'mteTrafo'))==0
+                disp('Error in plotMTEtrafo:  Need to compute mteTrafo first')
+                return
+            end
+            
+            % MTE  evolution
+            figure; hold on;
+            
+            plot(obj.mte.mteTrafo.scalevec,obj.mte.mteTrafo.lrcMTE,'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
+            plot(10*obj.mte.mteTrafo.scalevec(end),obj.mte.mteTrafo.lesMTE,'ks','markersize',24,'markerfacecolor',obj.params.bcolor)
+            set(gca,'yscale','log','xscale','log','fontsize',24,'linewidth',4)
+            xlabel('\alpha','fontsize',36)
+            ylabel('MTE','fontsize',24)
             
         end
         

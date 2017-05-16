@@ -337,6 +337,110 @@ classdef lrcClass
             
         end
         
+         
+       function obj = computeMomentsSweepParamsLES(obj)
+            
+            
+            
+            %% Unpack params locally
+            mu = obj.params.mu;
+            %meanK = params.meanK;
+            %sigK = params.sigK;
+            Kparams = obj.params.Kparams;
+            Tmax = obj.params.Tmax;
+            dt = obj.params.dt;
+            numtrials = obj.params.numtrials;
+            lplot = obj.params.lplot;
+            poiscolor =obj.params.poiscolor;
+            bcolor = obj.params.bcolor ;
+            f = obj.params.f;
+            lambda = obj.params.lambda;
+            lextinct = obj.params.lextinct;
+            M = obj.params.M;
+            method = obj.params.method;
+            
+            if isempty(obj.params.zsweep)
+                obj.params = obj.params.initZSweep();
+            end
+            
+            zmin = obj.params.zsweep.zmin;
+            zmax = obj.params.zsweep.zmax;
+            numzs = obj.params.zsweep.numzs;
+            
+            
+            sigmin = obj.params.zsweep.sigmin;
+            sigmax = obj.params.zsweep.sigmax;
+            numsigs = obj.params.zsweep.numsigs;
+            
+            %zmin_an = obj.params.zsweep.zmin_an;
+            %zmax_an = obj.params.zsweep.zmax_an;
+            %numzs_an = obj.params.zsweep.numzs_an;
+            numsteps = length(0:obj.params.dt:obj.params.Tmax);
+            
+            %% Arrays
+            zarray = linspace(zmin,zmax,numzs);
+            %larray = -zarray./log(f);
+            %farray = exp(-zarray./lambda);
+            %zarray_an = linspace(zmin_an,zmax_an,numzs_an);
+            %larray_an = -zarray_an./log(f);
+            %farray_an = exp(-zarray_an./lambda);
+            %         momentsL = zeros(numsteps,M,numel(larray));
+            %         momentsF = zeros(numsteps,M,numel(larray));
+            %statMomL = zeros(numzs_an,M);
+            %statMomF = zeros(numzs_an,M);
+            
+            sigarray = sqrt(2*zarray);
+            
+            obj.momentSweep.momentsS = zeros(numsteps,M,numsigs);
+            %% Compute
+            % sweep sigma
+            for j = 1:numsigs
+                disp(['Beginning sigma # ' num2str(j) ' of ' num2str(obj.params.zsweep.numsigs)])
+                
+                obj.momentSweep.momentsS(:,:,j) = lesMoments(mu,Kparams,sigarray(j),numtrials,Tmax,dt,lextinct,M);
+                
+            end
+            
+            %% Plot
+            if lplot
+                
+                obj.plotMomentSweepLES();
+                
+            end
+            
+       end
+        
+       function obj = plotMomentSweepLES(obj)
+            statMomS = zeros(obj.params.zsweep.numsigs_an,obj.params.M);
+            sigarray_an = linspace(obj.params.zsweep.sigmin_an,obj.params.zsweep.sigmax_an,...
+                obj.params.zsweep.numsigs_an);
+            
+            
+            meanEndS = reshape(obj.momentSweep.momentsS(end,1,:),1,obj.params.zsweep.numzs);
+            varEndS = reshape(obj.momentSweep.momentsS(end,2,:) - obj.momentSweep.momentsS(end,1,:).^2,1,obj.params.zsweep.numsigs);
+            
+           
+            for jj = 1:obj.params.zsweep.numsigs_an
+                statMomS(jj,:) = lesExactStationaryMoments(obj.params.mu,obj.params.Kparams(1),...
+                    sigarray_an(jj),obj.params.M);
+            end
+            
+            
+            meanEndS_an = statMomS(:,1);
+            
+            varEndS_an = statMomS(:,2) - meanEndS_an.^2;
+            
+            
+            figure; hold on;
+            plot(meanEndS./obj.params.Kparams(1),varEndS./obj.params.Kparams(1)./obj.params.Kparams(1),'ks','markersize',24,'markerfacecolor',obj.params.bcolor);
+            plot(meanEndS_an./obj.params.Kparams(1),varEndS_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color',[.3 .3 .3])
+            
+            set(gca,'fontsize',24,'linewidth',4)
+            xlabel('E[X]/K','fontsize',24);
+            ylabel('Var[X]/K^2','fontsize',24);
+            axis([0 1 0 .3])
+            
+       end
         
         function obj = disTrafo(obj)
             

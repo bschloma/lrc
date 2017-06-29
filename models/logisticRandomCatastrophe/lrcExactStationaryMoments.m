@@ -16,7 +16,7 @@ for m = 1:M
     
     % for product term
     mvec = 1:(m-1);
-    prodfactor = 1-l.*(1-f.^mvec)./r;
+    prodfactor = 1-l.*(1-f.^mvec)./mvec./r;
     
     % the mth moment
     % For large m, K, can remove K^m to compute moments of X/K, avoiding large

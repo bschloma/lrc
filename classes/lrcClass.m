@@ -32,7 +32,6 @@ classdef lrcClass
         dis = struct();                 % 'distributions', struct for distribution transformation 
         mte = struct();                 % 'mean time to extinction', struct for MTE calculations
         
-        
     end
     
     methods
@@ -323,22 +322,21 @@ classdef lrcClass
             varEndL_an = statMomL(:,2) - meanEndL_an.^2;
             varEndF_an = statMomF(:,2) - meanEndF_an.^2;
             
-            
+            agrey = [.4 .4 .4];
             figure; hold on;
             plot(meanEndL./obj.params.Kparams(1),varEndL./obj.params.Kparams(1)./obj.params.Kparams(1),'kd','markersize',24,'markerfacecolor',obj.params.poiscolor);
             plot(meanEndF./obj.params.Kparams(1),varEndF./obj.params.Kparams(1)./obj.params.Kparams(1),'ko','markersize',24,'markerfacecolor',obj.params.poiscolor);
-            plot(meanEndL_an./obj.params.Kparams(1),varEndL_an./obj.params.Kparams(1)./obj.params.Kparams(1),'k-','linewidth',4)
-            plot(meanEndF_an./obj.params.Kparams(1),varEndF_an./obj.params.Kparams(1)./obj.params.Kparams(1),'k-','linewidth',4)
+            plot(meanEndL_an./obj.params.Kparams(1),varEndL_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color',agrey)
+            plot(meanEndF_an./obj.params.Kparams(1),varEndF_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color',agrey)
             
             set(gca,'fontsize',24,'linewidth',4)
-            xlabel('E[X]/\kappa','fontsize',24);
-            ylabel('Var[X]/\kappa^2','fontsize',24);
+            xlabel('E[X]/K','fontsize',24);
+            ylabel('Var[X]/K^2','fontsize',24);
             axis([0 1 0 .3])
             
         end
         
-         
-       function obj = computeMomentsSweepParamsLES(obj)
+        function obj = computeMomentsSweepParamsLES(obj)
             
             
             
@@ -408,9 +406,9 @@ classdef lrcClass
                 
             end
             
-       end
+        end
         
-       function obj = plotMomentSweepLES(obj)
+        function obj = plotMomentSweepLES(obj)
             statMomS = zeros(obj.params.zsweep.numsigs_an,obj.params.M);
             sigarray_an = linspace(obj.params.zsweep.sigmin_an,obj.params.zsweep.sigmax_an,...
                 obj.params.zsweep.numsigs_an);
@@ -419,7 +417,7 @@ classdef lrcClass
             meanEndS = reshape(obj.momentSweep.momentsS(end,1,:),1,obj.params.zsweep.numzs);
             varEndS = reshape(obj.momentSweep.momentsS(end,2,:) - obj.momentSweep.momentsS(end,1,:).^2,1,obj.params.zsweep.numsigs);
             
-           
+            
             for jj = 1:obj.params.zsweep.numsigs_an
                 statMomS(jj,:) = lesExactStationaryMoments(obj.params.mu,obj.params.Kparams(1),...
                     sigarray_an(jj),obj.params.M);
@@ -433,14 +431,58 @@ classdef lrcClass
             
             figure; hold on;
             plot(meanEndS./obj.params.Kparams(1),varEndS./obj.params.Kparams(1)./obj.params.Kparams(1),'ks','markersize',24,'markerfacecolor',obj.params.bcolor);
-            plot(meanEndS_an./obj.params.Kparams(1),varEndS_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color',[.3 .3 .3])
+            plot(meanEndS_an./obj.params.Kparams(1),varEndS_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color','k');
             
             set(gca,'fontsize',24,'linewidth',4)
             xlabel('E[X]/K','fontsize',24);
             ylabel('Var[X]/K^2','fontsize',24);
             axis([0 1 0 .3])
             
-       end
+        end
+        
+        function obj = plotMomentSweepCompare(obj)
+            
+            obj.plotMomentSweepLRC();
+            
+            hold on;
+            statMomS = zeros(obj.params.zsweep.numsigs_an,obj.params.M);
+            sigarray_an = linspace(obj.params.zsweep.sigmin_an,obj.params.zsweep.sigmax_an,...
+                obj.params.zsweep.numsigs_an);
+            
+            
+            meanEndS = reshape(obj.momentSweep.momentsS(end,1,:),1,obj.params.zsweep.numzs);
+            varEndS = reshape(obj.momentSweep.momentsS(end,2,:) - obj.momentSweep.momentsS(end,1,:).^2,1,obj.params.zsweep.numsigs);
+            
+
+            for jj = 1:obj.params.zsweep.numsigs_an
+                statMomS(jj,:) = lesExactStationaryMoments(obj.params.mu,obj.params.Kparams(1),...
+                    sigarray_an(jj),obj.params.M);
+            end
+            
+            
+            meanEndS_an = statMomS(:,1);
+            
+            varEndS_an = statMomS(:,2) - meanEndS_an.^2;
+            
+            
+%<<<<<<< HEAD
+            %figure; hold on;
+            %plot(meanEndS./obj.params.Kparams(1),varEndS./obj.params.Kparams(1)./obj.params.Kparams(1),'ks','markersize',24,'markerfacecolor',obj.params.bcolor);
+            %plot(meanEndS_an./obj.params.Kparams(1),varEndS_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color',[.3 .3 .3])
+            
+            %set(gca,'fontsize',24,'linewidth',4)
+            %xlabel('E[X]/K','fontsize',24);
+            %ylabel('Var[X]/K^2','fontsize',24);
+            %axis([0 1 0 .3])
+            
+       %end
+%=======
+            plot(meanEndS./obj.params.Kparams(1),varEndS./obj.params.Kparams(1)./obj.params.Kparams(1),'ks','markersize',24,'markerfacecolor',obj.params.bcolor);
+            plot(meanEndS_an./obj.params.Kparams(1),varEndS_an./obj.params.Kparams(1)./obj.params.Kparams(1),'-','linewidth',4,'color',[.3 .3 .3])
+            
+            
+        end
+%>>>>>>> 3bc38ddcf729b006ca3a54144abd8689feff2752
         
         function obj = disTrafo(obj)
             
@@ -536,6 +578,59 @@ classdef lrcClass
             
         end
         
+        function obj = computeDisTrafoMeanVarTheory(obj)
+            
+             %% Unpack params locally
+            mu = obj.params.mu;
+            Kparams = obj.params.Kparams;
+            K = Kparams(1);
+            Tmax = obj.params.Tmax;
+            dt = obj.params.dt;
+            numtrials = obj.params.numtrials;
+            f = obj.params.f;
+            lambda = obj.params.lambda;
+            
+            poiscolor = obj.params.poiscolor;
+            bcolor = obj.params.bcolor;
+            sigma = obj.params.sigma;
+            M = obj.params.M;
+            
+           
+            
+            numbins = obj.params.distrafo.numbins;
+            numalphs = obj.params.distrafo.numalphs;
+            lmultmax = obj.params.distrafo.lmultmax;
+            
+            
+            %% Arrays
+           
+            
+            scalevec = logspace(0,log10(lmultmax),numalphs);
+            obj.dis.scalevec = scalevec;
+            
+           
+            
+            numalphs_an = 100;
+            alpha_an_vec = logspace(0, log10(obj.params.distrafo.lmultmax),numalphs_an);
+ 
+            lvec = lambda.*alpha_an_vec;
+            fvec = exp(-sigma./sqrt(lvec));
+            rvec = mu -lvec.*log(fvec) - lvec.*log(fvec).*log(fvec)./2;
+            Kvec = K.*(1-lvec.*log(fvec)./mu - lvec.*log(fvec).*log(fvec)./2./mu);
+            obj.dis.moms_an = zeros(numalphs_an,M);
+            
+            for a = 1:numalphs_an
+               obj.dis.moms_an(a,:) = lrcExactStationaryMoments(rvec(a),Kvec(a),lvec(a),fvec(a),M);
+            end
+            
+            obj.dis.alpha_an_vec = alpha_an_vec;
+            
+            
+            
+            
+            
+        end
+        
         function obj = plotDisTrafo(obj)
             
             if numel(fieldnames(obj.params.distrafo))==0
@@ -571,53 +666,69 @@ classdef lrcClass
             axis([0 5 0 obj.params.distrafo.ymax])
             
             % Mean
-            
+            obj = obj.computeDisTrafoMeanVarTheory();
             
             xmin = .8; xmax_mult = 7; numxs = 10;
             xvec = linspace(xmin,xmax_mult*obj.dis.scalevec(end),numxs);
             K = obj.params.Kparams(1);
             
-            
+           % numalphs_an = 100;
+            %moms_an = zeros(numalphs_an,2);
+            %for a = 1:numalphs_an
+           %     moms_an(a,:) = lrcExactStationaryMoments(obj.params.mu,K,obj.params.lambda,obj.params,f,2);
+            %end
+            %alpha_an_vec = logspace(0, log10(obj.params.distrafo.lmultmax),numalphs_an);
+
             figure; hold on;
+            ax = subplot(3,1,1); hold on;
             plot(obj.dis.scalevec,obj.dis.lrcMeans./K,'ko','markerfacecolor',obj.params.poiscolor,'markersize',22,'linewidth',2)
-            plot(obj.dis.scalevec,obj.dis.lrcExactMoms(:,1)./K,'color',obj.params.poiscolor,'linewidth',4)
+            plot(obj.dis.alpha_an_vec,obj.dis.moms_an(:,1)./K,'color',obj.params.poiscolor,'linewidth',4)
+            %plot(obj.dis.scalevec,obj.dis.lrcExactMoms(:,1)./K,'color',obj.params.poiscolor,'linewidth',4)
+            
             plot(xmax_mult*obj.dis.scalevec(end),obj.dis.lesMeans./K,'ks','markerfacecolor',obj.params.bcolor,'linewidth',2,'markersize',22)
             plot(xvec,obj.dis.lesExactMoms(1).*ones(size(xvec))./K,'color',obj.params.bcolor,'linewidth',4,'linestyle','--')
             
             set(gca,'fontsize',22,'xscale','log','linewidth',4)
-            xlabel('\alpha','fontsize',22)
+            %xlabel('\alpha','fontsize',30)
             ylabel('E[X]/K','fontsize',22)
             axis([xmin xmax_mult*obj.dis.scalevec(end) 0 1]);
             
             % Variance
             %vend_theory = Kvec.^2.*(-log(fvec)-(1-fvec)).*lvec./rvec.*(1+lvec.*log(fvec)./rvec);
             %vend_theory_lim = Kvec.^2.*(log(fvec).^2).*lvec./2./rvec.*(1+lvec.*log(fvec)./rvec);
-            lrc_var_theory = obj.dis.lrcExactMoms(:,2) - obj.dis.lrcExactMoms(:,1).^2;
+            %lrc_var_theory = obj.dis.lrcExactMoms(:,2) - obj.dis.lrcExactMoms(:,1).^2;
+            %les_var_theory =obj.dis.lesExactMoms(2) - obj.dis.lesExactMoms(1)^2;
+            lrc_var_theory = obj.dis.moms_an(:,2) - obj.dis.moms_an(:,1).^2;
             les_var_theory =obj.dis.lesExactMoms(2) - obj.dis.lesExactMoms(1)^2;
-            figure; hold on;
+            %figure; hold on;
+            ax = subplot(3,1,2); hold on;
             plot(obj.dis.scalevec,obj.dis.lrcVars./K^2,'ko','markerfacecolor',obj.params.poiscolor,'linewidth',2,'markersize',22)
             plot(7*obj.dis.scalevec(end),obj.dis.lesVars./K^2,'ks','markerfacecolor',obj.params.bcolor,'linewidth',2,'markersize',22)
-            plot(obj.dis.scalevec,lrc_var_theory/K^2,'color',obj.params.poiscolor,'linewidth',4)
+            plot(obj.dis.alpha_an_vec,lrc_var_theory/K^2,'color',obj.params.poiscolor,'linewidth',4)
+
+            %plot(obj.dis.scalevec,lrc_var_theory/K^2,'color',obj.params.poiscolor,'linewidth',4)
             
             plot(xvec,les_var_theory./K^2.*ones(size(xvec)),'color',obj.params.bcolor,'linewidth',4,'linestyle','--')
             
             set(gca,'fontsize',22,'linewidth',4)
-            xlabel('\alpha','fontsize',22)
+            %xlabel('\alpha','fontsize',22)
             ylabel('Var[X]/K^2','fontsize',22)
             set(gca,'xscale','log')
             axis([.8 7*obj.dis.scalevec(end) 0 .3])
             
-            figure; hold on;
-            plot(obj.dis.scalevec,obj.dis.dkl,'ko','markerfacecolor',[.2 .2 .2],'markersize',22,'linewidth',2)
+            %figure; hold on;
+            norm = sum(obj.dis.lrcHist(1,:).*obj.dis.bins);
+            ax = subplot(3,1,3); hold on;
+            plot(obj.dis.scalevec,obj.dis.dkl./norm,'ko','markerfacecolor',[.2 .2 .2],'markersize',22,'linewidth',2)
             
             %plot(xmax_mult*scalevec(end),obj.dis.lesMeans./K,'ks','markerfacecolor',bcolor,'linewidth',2,'markersize',22)
             %plot(xvec,lesExactMoms(1).*ones(size(xvec)),'kd','color',bcolor,'markerfacecolor',.5*bcolor,'linewidth',1,'markersize',18)
             %plot(xvec,lesExactMoms(1).*ones(size(xvec))./K,'color',bcolor,'linewidth',4,'linestyle','--')
             
             set(gca,'fontsize',22,'xscale','log','linewidth',4)
-            xlabel('\alpha','fontsize',22)
-            ylabel('D_{KL}','fontsize',22)
-            axis([xmin xmax_mult*obj.dis.scalevec(end) 0 1.2*max(obj.dis.dkl)]);
+            xlabel('\alpha','fontsize',30)
+           ylabel('D_{KL} ','fontsize',22)
+            axis([xmin xmax_mult*obj.dis.scalevec(end) 0 1.2*max(obj.dis.dkl./norm)]);
             
             
         end
@@ -696,6 +807,143 @@ classdef lrcClass
             
             
             [obj.mte.lrcMTE_K,obj.mte.lesMTE_K] = compareMTE_RC_ES_K(mu,Kvec,dt,lambda,f,numtrials);
+            
+        end
+        
+        function obj = plotMTEcompareSig(obj)
+           
+            lambdavec = linspace(obj.params.lambda,obj.params.mte.lmultmax*obj.params.lambda,obj.params.mte.numls);
+            
+            
+            sigma_vec = sqrt(-2.*lambdavec.*log(obj.params.f));
+            
+            
+            figure; hold on;
+            plot(sigma_vec.^2/2,obj.mte.lrcMTE_sig,'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
+            plot(sigma_vec.^2/2,obj.mte.lesMTE_sig,'ko','markersize',24,'markerfacecolor',obj.params.bcolor)
+            set(gca,'fontsize',24,'linewidth',4,'ticklength',[.02;.02])
+            set(gca,'yscale','log')
+            set(gca,'yminortick','off','xminortick','off')
+
+            %title('MTE','fontsize',24)
+            %legend({'LRC','LES'},'fontsize',24)
+            
+        end
+        
+        function obj = plotMTEcompareK(obj)
+            K = obj.params.Kparams(1);
+            Kvec = logspace(log10(K),obj.params.mte.Kmultmax*log10(K),obj.params.mte.numKs);
+            
+            %sigma_vec = sqrt(-2.*lambdavec.*log(obj.params.f));
+            
+            
+            figure; hold on;
+            plot(Kvec,obj.mte.lrcMTE_K,'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
+            plot(Kvec,obj.mte.lesMTE_K,'ko','markersize',24,'markerfacecolor',obj.params.bcolor)
+            set(gca,'fontsize',24,'linewidth',4,'ticklength',[.02;.02])
+            set(gca,'yscale','log')
+            set(gca,'xscale','log')
+            set(gca,'yminortick','off','xminortick','off')
+            set(gca,'ytick',[1e0 1e2 1e4])
+            set(gca,'xtick',[1e2 1e4 1e6])
+            %axis([1e0 1e6 1e0 1e4])
+            %title('MTE','fontsize',24)
+            %legend({'LRC','LES'},'fontsize',24)
+            
+        end
+        
+        function obj = mteTrafo(obj)
+            
+            
+            
+            %% Unpack params locally
+            mu = obj.params.mu;
+            Kparams = obj.params.Kparams;
+            K = Kparams(1);
+            Tmax = obj.params.Tmax;
+            dt = obj.params.dt;
+            numtrials = obj.params.numtrials;
+            f = obj.params.f;
+            lambda = obj.params.lambda;
+            lextinct = obj.params.lextinct;
+            lplot = obj.params.lplot;
+            poiscolor = obj.params.poiscolor;
+            bcolor = obj.params.bcolor;
+            sigma = obj.params.sigma;
+            M = obj.params.M;
+            
+            if sum(strcmp(fieldnames(obj.params.mte),'mtetrafo'))==0
+                obj.params = obj.params.initMTEtrafo();
+            end
+            
+            numalphs = obj.params.mte.mtetrafo.numalphs;
+            lmultmax = obj.params.mte.mtetrafo.lmultmax;
+            %ymax = obj.params.distrafo.ymax;
+            %method = obj.params.distrafo.method;
+            
+            
+            %% Arrays
+            
+            
+            scalevec = logspace(0,log10(lmultmax),numalphs);
+            obj.mte.mteTrafo.scalevec = scalevec;
+            
+            lvec = lambda.*scalevec;
+            fvec = exp(-sigma./sqrt(lvec));
+            rvec = mu -lvec.*log(fvec) - lvec.*log(fvec).*log(fvec)./2;
+            Kvec = K.*(1-lvec.*log(fvec)./mu - lvec.*log(fvec).*log(fvec)./2./mu);
+            dtvec = dt./sqrt(scalevec);    %adaptive timestep
+            
+            obj.mte.mteTrafo.lvec = lvec;
+            obj.mte.mteTrafo.fvec = fvec;
+            obj.mte.mteTrafo.rvec = rvec;
+            obj.mte.mteTrafo.Kvec = Kvec;
+            obj.mte.mteTrafo.dtvec = dtvec;
+            
+            
+            obj.mte.mteTrafo.lrcMTE = zeros(numalphs,1);
+            obj.mte.mteTrafo.lesMTE = 0;
+            
+            rB = mu;
+            KB = K;
+            dtB = obj.params.dt;
+            
+            [obj.mte.mteTrafo.lesMTE] = lesMTE(rB,KB,sigma,dtB,numtrials);
+            
+            
+            
+            
+            %% Loop through alphas
+            for s = 1:numalphs
+                disp(['Beginning alpha = ' num2str(scalevec(s))])
+                
+                [obj.mte.mteTrafo.lrcMTE(s)] = lrcMTE(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),numtrials,false);                
+                
+            end
+            
+            if lplot
+                obj.plotMTEtrafo();
+            end
+            
+            
+            
+        end
+        
+        function obj = plotMTEtrafo(obj)
+            
+            if sum(strcmp(fieldnames(obj.mte),'mteTrafo'))==0
+                disp('Error in plotMTEtrafo:  Need to compute mteTrafo first')
+                return
+            end
+            
+            % MTE  evolution
+            figure; hold on;
+            
+            plot(obj.mte.mteTrafo.scalevec,obj.mte.mteTrafo.lrcMTE,'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
+            plot(10*obj.mte.mteTrafo.scalevec(end),obj.mte.mteTrafo.lesMTE,'ks','markersize',24,'markerfacecolor',obj.params.bcolor)
+            set(gca,'yscale','log','xscale','log','fontsize',24,'linewidth',4)
+            xlabel('\alpha','fontsize',36)
+            ylabel('MTE','fontsize',24)
             
         end
         

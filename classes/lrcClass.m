@@ -903,6 +903,7 @@ classdef lrcClass
             
             obj.mte.mteTrafo.lrcMTE = zeros(numalphs,1);
             obj.mte.mteTrafo.lesMTE = 0;
+            obj.mte.mteTrafo.lrcMeans = zeros(numalphs,1);
             
             rB = mu;
             KB = K;
@@ -910,15 +911,17 @@ classdef lrcClass
             
             [obj.mte.mteTrafo.lesMTE] = lesMTE(rB,KB,sigma,dtB,numtrials);
             
-            
+            lesMeans = lesMoments(rB,KB,sigma,numtrials,Tmax,dt,false,1);
+            obj.mte.mteTrafo.lesMean = lesMeans(end);
             
             
             %% Loop through alphas
             for s = 1:numalphs
                 disp(['Beginning alpha = ' num2str(scalevec(s))])
                 
-                [obj.mte.mteTrafo.lrcMTE(s)] = lrcMTE(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),numtrials,false);                
-                
+                [obj.mte.mteTrafo.lrcMTE(s)] = lrcMTE(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),numtrials,false,'euler');                
+                thisMeanVec = lrcMoments(rvec(s),Kvec(s),fvec(s),lvec(s),numtrials,Tmax,dtvec(s),false,'euler',1);
+                obj.mte.mteTrafo.lrcMeans(s) = thisMeanVec(end);
             end
             
             if lplot
@@ -944,6 +947,15 @@ classdef lrcClass
             set(gca,'yscale','log','xscale','log','fontsize',24,'linewidth',4)
             xlabel('\alpha','fontsize',36)
             ylabel('MTE','fontsize',24)
+            
+            % Mean  evolution
+            figure; hold on;
+            
+            plot(obj.mte.mteTrafo.scalevec,obj.mte.mteTrafo.lrcMeans,'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
+            plot(10*obj.mte.mteTrafo.scalevec(end),obj.mte.mteTrafo.lesMean,'ks','markersize',24,'markerfacecolor',obj.params.bcolor)
+            set(gca,'yscale','linear','xscale','log','fontsize',24,'linewidth',4)
+            xlabel('\alpha','fontsize',36)
+            ylabel('E[X]','fontsize',24)
             
         end
         

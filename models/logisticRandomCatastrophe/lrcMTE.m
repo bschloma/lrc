@@ -1,6 +1,20 @@
-function [mte] = lrcMTE(r,K,lambda,f,dt,numtrials,lplot)
+function [mte] = lrcMTE(r,K,lambda,f,dt,numtrials,lplot,method)
+
+if ~exist('method', 'var') || isempty(method)
+    method = 'pdmp';
+end
 
 rng('shuffle');
+
+switch method
+    case 'pdmp'
+        eta = 1.;
+    case 'euler'
+        eta = 0.;
+    otherwise
+        disp('Error in lrcMoments:  Invalid method type');
+        return
+end
 
 bigstep = round(10000/dt);
 %random_numbers = rand(bigstep,numtrials);
@@ -26,7 +40,11 @@ for n =1:numtrials
             this_rn = random_numbers(s);
         end
         
-        thispop = rcUpdate(thispop,dt,r,K,lambda,f,this_rn);
+        dNt = this_rn < lambda*dt;
+        
+        thispop = (1-dNt).*thispop + (1-eta.*dNt).*dt*r.*thispop.*(1-thispop./K) + dNt.*f.*thispop;
+
+        %thispop = rcUpdate(thispop,dt,r,K,lambda,f,this_rn);
         
         if thispop <= 1
             te_vec(n) = s*dt;

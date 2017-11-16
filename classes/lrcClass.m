@@ -748,8 +748,10 @@ classdef lrcClass
             poiscolor = obj.params.poiscolor;
             bcolor = obj.params.bcolor;
             sigma = obj.params.sigma;
+            method = obj.params.method;
+            x0 = obj.params.x0;
             
-            obj.mte.lrcMTE = lrcMTE(mu,K,lambda,f,dt,numtrials,lplot);
+            obj.mte.lrcMTE = lrcMTE(mu,K,lambda,f,dt,numtrials,lplot,method,x0);
             
             
             
@@ -771,15 +773,18 @@ classdef lrcClass
             poiscolor = obj.params.poiscolor;
             bcolor = obj.params.bcolor;
             sigma = obj.params.sigma; 
+            method = obj.params.method;
+            x0 = obj.params.x0;
             
             if numel(fieldnames(obj.params.mte))==0
+                % runs default with mapType = 1, sigma^2 = -2*lambda*log(f)
                 obj.params = obj.params.initMTE();
             end
             
             lambdavec = linspace(lambda,obj.params.mte.lmultmax*lambda,obj.params.mte.numls);
+            maptype = obj.params.mte.maptype;
             
-            
-            [obj.mte.lrcMTE_sig,obj.mte.lesMTE_sig] = compareMTE_RC_ES(mu,K,dt,lambdavec,f,numtrials);
+            [obj.mte.lrcMTE_sig,obj.mte.lesMTE_sig] = compareMTE_RC_ES(mu,K,dt,lambdavec,f,numtrials,maptype);
             
         end
 
@@ -798,24 +803,79 @@ classdef lrcClass
             poiscolor = obj.params.poiscolor;
             bcolor = obj.params.bcolor;
             sigma = obj.params.sigma; 
+            method = obj.params.method;
+            x0 = obj.params.x0;
             
             if numel(fieldnames(obj.params.mte))==0
                 obj.params = obj.params.initMTE();
             end
             
             Kvec = logspace(log10(K),obj.params.mte.Kmultmax*log10(K),obj.params.mte.numKs);
+            maptype = obj.params.mte.maptype;
+ 
             
-            
-            [obj.mte.lrcMTE_K,obj.mte.lesMTE_K] = compareMTE_RC_ES_K(mu,Kvec,dt,lambda,f,numtrials);
+            [obj.mte.lrcMTE_K,obj.mte.lesMTE_K,obj.mte.Kvec_LRC,obj.mte.Kvec_LES] = compareMTE_RC_ES_K(mu,Kvec,dt,lambda,f,numtrials,maptype,method,x0);
             
         end
+        
+        function obj = compareMTElrcles_x0(obj)
+            
+            mu = obj.params.mu;
+            Kparams = obj.params.Kparams;
+            K = Kparams(1);
+            Tmax = obj.params.Tmax;
+            dt = obj.params.dt;
+            numtrials = obj.params.numtrials;
+            f = obj.params.f;
+            lambda = obj.params.lambda;
+            lextinct = obj.params.lextinct;
+            lplot = obj.params.lplot;
+            poiscolor = obj.params.poiscolor;
+            bcolor = obj.params.bcolor;
+            sigma = obj.params.sigma; 
+            method = obj.params.method;
+            x0 = obj.params.x0;
+            
+            if numel(fieldnames(obj.params.mte))==0
+                obj.params = obj.params.initMTE();
+            end
+            
+            if sum(strcmp(fieldnames(obj.mte),'x0_vec')) == 1
+                x0_vec = obj.mte.x0_vec;
+            else
+                x0_vec = linspace(x0,obj.params.mte.x0multmax*x0,obj.params.mte.numx0s);
+                obj.mte.x0_vec = x0_vec;
+            end
+            
+            maptype = obj.params.mte.maptype;
+ 
+            
+            [obj.mte.lrcMTE_x0,obj.mte.lesMTE_x0] = compareMTE_RC_ES_x0(mu,K,dt,lambda,f,numtrials,maptype,method,x0_vec);
+            
+           
+            obj.plotMTEcompareX0();
+           
+        end
+
+        
         
         function obj = plotMTEcompareSig(obj)
            
             lambdavec = linspace(obj.params.lambda,obj.params.mte.lmultmax*obj.params.lambda,obj.params.mte.numls);
             
-            
-            sigma_vec = sqrt(-2.*lambdavec.*log(obj.params.f));
+            switch obj.params.mte.maptype
+                case 1
+                    % equate stationary means
+                    sigma_vec = sqrt(-2.*lambdavec.*log(obj.params.f));
+                    
+                    
+                case 2
+                    % diffusion limit
+                    sigma_vec = -sqrt(lambdavec).*log(obj.params.f);
+                    
+            end
+
+            %sigma_vec = sqrt(-2.*lambdavec.*log(obj.params.f));
             
             
             figure; hold on;
@@ -839,7 +899,7 @@ classdef lrcClass
             
             figure; hold on;
             plot(Kvec,obj.mte.lrcMTE_K,'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
-            plot(Kvec,obj.mte.lesMTE_K,'ko','markersize',24,'markerfacecolor',obj.params.bcolor)
+            plot(Kvec,obj.mte.lesMTE_K,'ks','markersize',24,'markerfacecolor',obj.params.bcolor)
             set(gca,'fontsize',24,'linewidth',4,'ticklength',[.02;.02])
             set(gca,'yscale','log')
             set(gca,'xscale','log')
@@ -852,6 +912,76 @@ classdef lrcClass
             
         end
         
+        function obj = plotMTEcompareX0(obj)
+            %x0 = obj.params.x0;
+            %x0 = linspace(x0,obj.params.mte.x0multmax*x0,obj.params.mte.numx0s);
+            x0_vec = obj.mte.x0_vec;
+            %sigma_vec = sqrt(-2.*lambdavec.*log(obj.params.f));
+            
+            
+            figure; hold on;
+            plot(x0_vec,log10(obj.mte.lrcMTE_x0+1),'linewidth',4,'color',obj.params.poiscolor)
+            plot(x0_vec,log10(obj.mte.lesMTE_x0+1),'linewidth',4,'color',obj.params.bcolor)
+            plot(x0_vec,log10(obj.mte.lrcMTE_x0+1),'ko','markersize',24,'markerfacecolor',obj.params.poiscolor)
+            plot(x0_vec,log10(obj.mte.lesMTE_x0+1),'ks','markersize',24,'markerfacecolor',obj.params.bcolor)
+            set(gca,'fontsize',24,'linewidth',4,'ticklength',[.02;.02])
+            set(gca,'yscale','linear')
+            set(gca,'xscale','log')
+            set(gca,'yminortick','off','xminortick','off')
+            %set(gca,'ytick',[1e0 1e2 1e4])
+            %set(gca,'xtick',[1e2 1e4 1e6])
+            %axis([1e0 1e6 1e0 1e4])
+            %title('MTE','fontsize',24)
+            %legend({'LRC','LES'},'fontsize',24)
+            
+            lcheckmean = 0;
+            if lcheckmean
+                r = obj.params.mu;
+                Kparams = obj.params.Kparams;
+                K = Kparams(1);
+                Tmax = obj.params.Tmax;
+                dt = obj.params.dt;
+                numtrials = obj.params.numtrials;
+                f = obj.params.f;
+                lambda = obj.params.lambda;
+                lextinct = obj.params.lextinct;
+                lplot = obj.params.lplot;
+                poiscolor = obj.params.poiscolor;
+                bcolor = obj.params.bcolor;
+                sigma = obj.params.sigma;
+                method = obj.params.method;
+                x0 = obj.params.x0;
+                maptype = obj.params.mte.maptype;
+                
+                switch maptype
+                    case 1
+                        % equate stationary means
+                        sigma = sqrt(-2.*lambda.*log(f));
+                        
+                        r_LRC = r.*ones(1,numel(lambda));
+                        K_LRC = K.*ones(1,numel(lambda));
+                        r_LES = r_LRC;
+                        K_LES = K_LRC;
+                    case 2
+                        % diffusion limit
+                        sigma = -sqrt(lambda).*log(f);
+                        r_LRC = r - lambda.*log(f);
+                        K_LRC = K.*(1-lambda./r.*log(f));
+                        r_LES = r + sigma.^2./2;
+                        K_LES = K.*(1+sigma.^2./r./2);
+                end
+            
+                mean_lrc = lrcMoments(r_LRC,[K_LRC,obj.params.Kparams(2)],f, lambda, 1000, 100, dt,lextinct,method,1);
+                mean_les = lesMoments(r_LES,[K_LES,obj.params.Kparams(2)],sigma,1000,100,dt,lextinct,1);
+                tvec = 0:dt:100;
+                figure; hold on;
+                plot(tvec,mean_lrc,'linewidth',4,'color',obj.params.poiscolor);
+                plot(tvec,mean_les,'linewidth',4,'color',obj.params.bcolor);
+                set(gca,'linewidth',4,'fontsize',24)
+                xlabel('rt','fontsize',24)
+                ylabel('E[X_t]','fontsize',24)
+            end
+        end
         function obj = mteTrafo(obj)
             
             
@@ -884,15 +1014,24 @@ classdef lrcClass
             
             %% Arrays
             
-            
-            scalevec = logspace(0,log10(lmultmax),numalphs);
-            obj.mte.mteTrafo.scalevec = scalevec;
+            if isempty(obj.mte.mteTrafo.scalevec)
+                scalevec = logspace(0,log10(lmultmax),numalphs);
+                obj.mte.mteTrafo.scalevec = scalevec;
+            else                                        % allow user to manually input a scalevec
+                scalevec = obj.mte.mteTrafo.scalevec;
+                obj.params.mte.mtetrafo.numalphs = numel(scalevec);
+                obj.params.mte.mtetrafo.lmultmax = scalevec(end);
+                numalphs = obj.params.mte.mtetrafo.numalphs;
+                lmultmax = obj.params.mte.mtetrafo.lmultmax;
+                
+            end
             
             lvec = lambda.*scalevec;
             fvec = exp(-sigma./sqrt(lvec));
             rvec = mu -lvec.*log(fvec) - lvec.*log(fvec).*log(fvec)./2;
             Kvec = K.*(1-lvec.*log(fvec)./mu - lvec.*log(fvec).*log(fvec)./2./mu);
-            dtvec = dt./sqrt(scalevec);    %adaptive timestep
+            %dtvec = dt./sqrt(scalevec);    %adaptive timestep
+            dtvec = dt./scalevec;    %adaptive timestep    Switched for large alpha scaling
             
             obj.mte.mteTrafo.lvec = lvec;
             obj.mte.mteTrafo.fvec = fvec;
@@ -904,13 +1043,14 @@ classdef lrcClass
             obj.mte.mteTrafo.lrcMTE = zeros(numalphs,1);
             obj.mte.mteTrafo.lesMTE = 0;
             obj.mte.mteTrafo.lrcMeans = zeros(numalphs,1);
+            obj.mte.mteTrafo.lrcTEvec = zeros(numalphs,numtrials);
             
             rB = mu;
             KB = K;
             dtB = obj.params.dt;
             
-            [obj.mte.mteTrafo.lesMTE] = lesMTE(rB,KB,sigma,dtB,numtrials);
-            
+            [obj.mte.mteTrafo.lesMTE,thisTEvec] = lesMTE(rB,KB,sigma,dtB,numtrials);
+            obj.mte.mteTrafo.lesTEvec = thisTEvec;
             lesMeans = lesMoments(rB,KB,sigma,numtrials,Tmax,dt,false,1);
             obj.mte.mteTrafo.lesMean = lesMeans(end);
             
@@ -919,7 +1059,8 @@ classdef lrcClass
             for s = 1:numalphs
                 disp(['Beginning alpha = ' num2str(scalevec(s))])
                 
-                [obj.mte.mteTrafo.lrcMTE(s)] = lrcMTE(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),numtrials,false,'euler');                
+                [obj.mte.mteTrafo.lrcMTE(s), thisTEvec] = lrcMTE(rvec(s),Kvec(s),lvec(s),fvec(s),dtvec(s),numtrials,false,'euler');
+                obj.mte.mteTrafo.lrcTEvec(s,:) = thisTEvec;
                 thisMeanVec = lrcMoments(rvec(s),Kvec(s),fvec(s),lvec(s),numtrials,Tmax,dtvec(s),false,'euler',1);
                 obj.mte.mteTrafo.lrcMeans(s) = thisMeanVec(end);
             end
@@ -946,7 +1087,7 @@ classdef lrcClass
             plot(10*obj.mte.mteTrafo.scalevec(end),obj.mte.mteTrafo.lesMTE,'ks','markersize',24,'markerfacecolor',obj.params.bcolor)
             set(gca,'yscale','log','xscale','log','fontsize',24,'linewidth',4)
             xlabel('\alpha','fontsize',36)
-            ylabel('MTE','fontsize',24)
+            ylabel('\tau','fontsize',24)
             
             % Mean  evolution
             figure; hold on;

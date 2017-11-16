@@ -55,6 +55,7 @@ classdef lrcParamsClass
         bcolor = [0. 0. 0.];
         M = 0;
         method = '';
+        x0 = 0.;
       
 
         zsweep = struct();
@@ -102,6 +103,7 @@ classdef lrcParamsClass
             obj.sigma = .8;
             obj.M = 8;
             obj.method = 'pdmp';
+            obj.x0 = 10;
             
             %obj.zsweep = struct();
             %obj.distrafo = struct();
@@ -169,6 +171,10 @@ classdef lrcParamsClass
             obj.mte.lmultmax = 75;
             obj.mte.numKs = 5;
             obj.mte.Kmultmax = 2.5;
+            obj.mte.numx0s = 5;
+            obj.mte.x0multmax = 100;
+            
+            obj.mte.maptype = 1;
             
          end
         
@@ -177,7 +183,8 @@ classdef lrcParamsClass
              
              obj.mte.mtetrafo.numalphs = 5;
              obj.mte.mtetrafo.lmultmax = 75;
-             
+             obj.mte.mtetrafo.scalevec = [];
+                          
          end
              
 %         

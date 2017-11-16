@@ -1,9 +1,12 @@
-function [mte] = lrcMTE(r,K,lambda,f,dt,numtrials,lplot,method)
+function [mte,varargout] = lrcMTE(r,K,lambda,f,dt,numtrials,lplot,method,x0)
 
 if ~exist('method', 'var') || isempty(method)
     method = 'pdmp';
 end
 
+if ~exist('x0', 'var') || isempty(x0)
+    x0 = 10;
+end
 rng('shuffle');
 
 switch method
@@ -18,17 +21,25 @@ end
 
 bigstep = round(10000/dt);
 %random_numbers = rand(bigstep,numtrials);
-pop0 = 10;%sqrt(K);
+%pop0 = 10;%sqrt(K);
 
 te_vec = zeros(1,numtrials);
 
 for n =1:numtrials
+    %if mod(n,10)==0
+    %    disp(num2str(n))
+    %end
     lextinct = 0;
-    thispop = pop0;
+    thispop = x0;
     s = 0;
     random_numbers = rand(bigstep,1);
 
     while lextinct == 0
+        if thispop <= 1
+            te_vec(n) = s*dt;
+            lextinct = 1;    
+        end
+        
         s = s+1;
         
         if s > bigstep
@@ -46,16 +57,14 @@ for n =1:numtrials
 
         %thispop = rcUpdate(thispop,dt,r,K,lambda,f,this_rn);
         
-        if thispop <= 1
-            te_vec(n) = s*dt;
-            lextinct = 1;    
-        end
+        
 
     end
 
 end
 
 mte = mean(te_vec);
+varargout(1) = {te_vec};
 
 if lplot
     figure;

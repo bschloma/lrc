@@ -1,6 +1,30 @@
-function [mte_rc,mte_es] = compareMTE_RC_ES(r,K,dt,lambda,f,numtrials)
+function [mte_rc,mte_es] = compareMTE_RC_ES(r,K,dt,lambda,f,numtrials,maptype,method,x0)
 
-sigma = sqrt(-2.*lambda.*log(f));
+switch maptype
+    case 1
+        % equate stationary means
+        sigma = sqrt(-2.*lambda.*log(f));
+        
+        rvec_LRC = r.*ones(1,numel(lambda));
+        Kvec_LRC = K.*ones(1,numel(lambda));
+        rvec_LES = rvec_LRC;
+        Kvec_LES = Kvec_LRC;
+    case 2
+        % diffusion limit
+        sigma = -sqrt(lambda).*log(f);
+        rvec_LRC = r - lambda.*log(f);
+        Kvec_LRC = K.*(1-lambda./r.*log(f));
+        rvec_LES = r + sigma.^2./2;
+        Kvec_LES = K.*(1+sigma.^2./r./2);
+end
+
+if ~exist('method', 'var') || isempty(method)
+    method = 'pdmp';
+end
+if ~exist('x0', 'var') || isempty(x0)
+    x0 = 10;
+end
+
 
 numls = numel(lambda);
 mte_rc = zeros(numls,1);
@@ -18,13 +42,17 @@ Tmax = 100;
 
 for n = 1:numls
     disp(num2str(n))
-    mte_rc(n) = lrcMTE(r,K,lambda(n),f,dt,numtrials,false);
+    %mte_rc(n) = lrcMTE(r,K,lambda(n),f,dt,numtrials,false);
+    mte_rc(n) = lrcMTE(rvec_LRC,Kvec_LRC,lambda(n),f,dt,numtrials,false,method,x0);
+
 %     pend_rc = logisticGrowthPoissonCollapse_fast(f,lambda(n),numtrials,Tmax,dt,r,K);
 % 
 %     m_rc(n) = mean(pend_rc);
 %     v_rc(n) = var(pend_rc);
     
-    mte_es(n) = lesMTE(r,K,sigma(n),dt,numtrials);
+    %mte_es(n) = lesMTE(r,K,sigma(n),dt,numtrials);
+    mte_es(n) = lesMTE(rvec_LES,Kvec_LES,sigma(n),dt,numtrials,x0);
+
     
 %     pend_es = logisticGrowthBrownian_endOnly(r,K,sigma(n),dt,Tmax,numtrials,1);
 % 
